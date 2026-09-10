@@ -99,5 +99,8 @@ class MilvusStore:
         return len(enriched)
 
     def count(self) -> int:
-        stats = self._client.get_collection_stats(self._collection)
-        return int(stats.get("row_count", 0))
+        """精确行数（query count(*)；get_collection_stats 有最终一致性延迟）。"""
+        res = self._client.query(
+            collection_name=self._collection, filter="", output_fields=["count(*)"]
+        )
+        return int(res[0]["count(*)"]) if res else 0

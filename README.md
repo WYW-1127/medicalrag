@@ -5,7 +5,7 @@
 ## 项目状态
 
 - [x] P1 基础设施与骨架（FastAPI / 配置分层 / 模型抽象层 / MySQL+Redis+Milvus / CI）
-- [ ] P2 数据与 Ingestion 管线
+- [x] P2 数据与 Ingestion 管线（多格式解析 / 结构感知分块 / Milvus 混合索引 / 幂等入库 CLI）
 - [ ] P3 检索管线（混合检索 + 重排）
 - [ ] P4 Agentic 编排与生成（LangGraph）
 - [ ] P5 API 层（SSE / 认证 / 会话）
@@ -34,6 +34,19 @@ cd backend && uv run uvicorn app.main:app --reload --port 8000         # 启动 
 
 切换 LLM：编辑 `.env` 的 `LLM__BASE_URL / LLM__MODEL / LLM__API_KEY`（例如 GLM：
 `https://open.bigmodel.cn/api/paas/v4` + `glm-4-flash`），无需改代码。
+
+## 知识入库（P2）
+
+```bash
+make ingest-samples                  # 入库内置样例（指南 md / 药品说明书 json / 医学页面 html）
+make probe q="高血压的诊断标准"        # 检索冒烟：dense 与 BM25 各返回 top-3
+make ingest                          # 入库 data/raw/ 下的真实语料（放置规范见 data/raw/README.md）
+cd backend && uv run python -m app.ingestion --dir ../data/raw --dry-run   # 只解析分块统计
+```
+
+管线能力：PDF（字号聚类标题 / 双栏 / 表格）/ Markdown / HTML / DOCX / JSON 药品说明书 / CSV；
+结构感知分块（可配置 structural/fixed/recursive，供评估消融）；Milvus 混合索引
+（dense HNSW-COSINE + BM25 jieba + 科室/文档类型元数据过滤）；按文档 hash 幂等重插。
 
 ## 目录结构
 

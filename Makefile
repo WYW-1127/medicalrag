@@ -1,4 +1,4 @@
-.PHONY: install lint fmt typecheck test infra-up infra-down infra-logs check-infra check-models
+.PHONY: install lint fmt typecheck test infra-up infra-down infra-logs check-infra check-models ingest ingest-samples probe
 
 install:
 	cd backend && uv sync
@@ -30,3 +30,12 @@ check-infra:
 
 check-models:
 	cd backend && uv run python ../scripts/check_models.py
+
+ingest:
+	cd backend && uv run python -m app.ingestion
+
+ingest-samples:
+	cd backend && uv run python -m app.ingestion --dir ../data/samples
+
+probe:
+	cd backend && uv run python ../scripts/probe_search.py "$(q)"

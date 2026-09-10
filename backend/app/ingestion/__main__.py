@@ -2,9 +2,15 @@ import argparse
 import asyncio
 import sys
 from pathlib import Path
+from typing import Any
 
-from app.core.logging import setup_logging
-from app.ingestion.pipeline import run_ingestion
+# Windows 控制台默认 GBK，强制 UTF-8 避免中文乱码
+_stdout: Any = sys.stdout
+if _stdout.encoding and _stdout.encoding.lower() != "utf-8":
+    _stdout.reconfigure(encoding="utf-8")
+
+from app.core.logging import setup_logging  # noqa: E402
+from app.ingestion.pipeline import run_ingestion  # noqa: E402
 
 
 def main() -> int:
