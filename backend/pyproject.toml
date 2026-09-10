@@ -41,6 +41,8 @@ ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S106"]
+# alembic 自动生成的迁移代码，模板风格不适用项目规则
+"alembic/versions/*" = ["E501", "I001", "UP035", "UP007"]
 
 [tool.mypy]
 python_version = "3.12"
