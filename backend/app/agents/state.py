@@ -5,6 +5,9 @@ from pydantic import BaseModel, Field
 from app.core.providers.llm import ChatMessage
 from app.rag.models import RetrievedChunk
 
+# 节点返回的局部状态更新（langgraph 约定）
+NodeUpdate = dict[str, Any]
+
 
 class StepEvent(BaseModel):
     """节点执行事件：前端检索时间线与 P5 SSE step 事件的数据源。"""
