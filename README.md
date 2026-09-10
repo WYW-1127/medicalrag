@@ -6,7 +6,7 @@
 
 - [x] P1 基础设施与骨架（FastAPI / 配置分层 / 模型抽象层 / MySQL+Redis+Milvus / CI）
 - [x] P2 数据与 Ingestion 管线（多格式解析 / 结构感知分块 / Milvus 混合索引 / 幂等入库 CLI）
-- [ ] P3 检索管线（混合检索 + 重排）
+- [x] P3 检索管线（双路召回 + 手写 RRF/加权融合 + BGE 重排 + 属性过滤 + 调试 CLI）
 - [ ] P4 Agentic 编排与生成（LangGraph）
 - [ ] P5 API 层（SSE / 认证 / 会话）
 - [ ] P6 前端（对话 + 检索时间线 + 知识库管理）
@@ -47,6 +47,18 @@ cd backend && uv run python -m app.ingestion --dir ../data/raw --dry-run   # 只
 管线能力：PDF（字号聚类标题 / 双栏 / 表格）/ Markdown / HTML / DOCX / JSON 药品说明书 / CSV；
 结构感知分块（可配置 structural/fixed/recursive，供评估消融）；Milvus 混合索引
 （dense HNSW-COSINE + BM25 jieba + 科室/文档类型元数据过滤）；按文档 hash 幂等重插。
+
+## 检索管线（P3）
+
+```bash
+make retrieve q="HbA1c 控制目标"                                    # 完整链路：双路召回→RRF融合→BGE重排
+cd backend && uv run python -m app.rag --q "妊娠期高血压如何用药" --department 心血管   # 科室过滤
+cd backend && uv run python -m app.rag --q "哮喘" --fusion weighted --no-rerank         # 切融合策略/关重排
+```
+
+两阶段检索：dense（BGE-M3 语义）+ BM25（jieba 精确术语）各召回 top-50 → 手写融合
+（RRF / 加权可切换，消融变量）→ BGE-reranker-v2-m3 精排取 top-8；每阶段耗时记录；
+`RetrievalResult` 含 dense/sparse/fused/rerank 四级分数，可完整追溯排序变化。
 
 ## 目录结构
 
