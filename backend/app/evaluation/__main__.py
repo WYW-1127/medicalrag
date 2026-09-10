@@ -21,7 +21,7 @@ from app.core.providers.llm import LLMProvider  # noqa: E402
 from app.evaluation.dataset import load_datasets  # noqa: E402
 from app.evaluation.runner import run_agent_eval, run_retrieval_eval  # noqa: E402
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _fmt_pct(x: float) -> str:

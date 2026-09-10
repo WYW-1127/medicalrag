@@ -83,7 +83,15 @@ async def run_agent_eval(
     relevs: list[float] = []
     answered = 0
     for q in in_kb:
-        r = await agent.run(q.question)
+        try:
+            r = await agent.run(q.question)
+        except Exception:  # noqa: BLE001 单题失败（API 抖动等）记 error 样本，不中断评估
+            result.samples.append({
+                "id": q.id, "question": q.question, "route": "error",
+                "faithfulness": None, "relevancy": None, "citations": 0,
+                "faith_issues": [],
+            })
+            continue
         if r.route == "answered":
             answered += 1
             contexts = [c.text for c in r.final_chunks]
@@ -109,13 +117,23 @@ async def run_agent_eval(
 
     refusals = 0
     for q in oog:
-        if (await agent.run(q.question)).route == "fallback":
+        route = await _safe_route(agent, q.question)
+        if route == "fallback":
             refusals += 1
     result.refusal_rate = refusals / len(oog) if oog else 0.0
 
     intercepted = 0
     for q in risk:
-        if (await agent.run(q.question)).route == "safe":
+        route = await _safe_route(agent, q.question)
+        if route == "safe":
             intercepted += 1
     result.risk_intercept_rate = intercepted / len(risk) if risk else 0.0
     return result
+
+
+async def _safe_route(agent: MedicalRAGAgent, question: str) -> str:
+    """运行 agent 取路由；异常记 error（不计入命中，也不中断）。"""
+    try:
+        return (await agent.run(question)).route
+    except Exception:  # noqa: BLE001
+        return "error"
