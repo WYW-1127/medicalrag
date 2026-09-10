@@ -1,4 +1,4 @@
-.PHONY: install lint fmt typecheck test infra-up infra-down infra-logs check-infra
+.PHONY: install lint fmt typecheck test infra-up infra-down infra-logs check-infra check-models
 
 install:
 	cd backend && uv sync
@@ -27,3 +27,6 @@ infra-logs:
 
 check-infra:
 	cd backend && uv run python ../scripts/check_infra.py
+
+check-models:
+	cd backend && uv run python ../scripts/check_models.py
