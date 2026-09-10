@@ -103,6 +103,7 @@ async def run_ingestion(
             stats.processed_docs += 1
             stats.total_chunks += n
             logger.info("入库 {}（{}）-> {} chunks", f.name, doc.department, n)
+            await _record_document(doc.title, n, meta)
         except Exception as exc:
             stats.errors.append(f"{f}: {exc}")
             logger.exception("处理失败 {}", f)
@@ -132,3 +133,42 @@ async def _record_job(stats: IngestStats) -> None:
             await session.commit()
     except Exception as exc:
         logger.warning("IngestJob 记录失败（忽略）: {}", exc)
+
+
+async def _record_document(title: str, chunk_count: int, meta: DocumentMeta) -> None:
+    """文档登记（documents 表）；按 doc_hash 幂等更新。MySQL 不可用时降级 warning。"""
+    try:
+        from sqlalchemy import select
+
+        from app.core.db import get_session_factory
+        from app.models import Document
+
+        settings = get_settings()
+        factory = get_session_factory(settings.database_url)
+        async with factory() as session:
+            existing = (
+                (
+                    await session.execute(
+                        select(Document).where(Document.doc_hash == meta.doc_hash)
+                    )
+                )
+                .scalars()
+                .one_or_none()
+            )
+            if existing is not None:
+                existing.title = title
+                existing.chunk_count = chunk_count
+            else:
+                session.add(
+                    Document(
+                        doc_hash=meta.doc_hash,
+                        source=meta.source,
+                        title=title,
+                        doc_type=meta.doc_type,
+                        department=meta.department,
+                        chunk_count=chunk_count,
+                    )
+                )
+            await session.commit()
+    except Exception as exc:
+        logger.warning("Document 登记失败（忽略）: {}", exc)
