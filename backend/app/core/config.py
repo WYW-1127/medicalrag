@@ -26,6 +26,14 @@ class RerankerSettings(BaseModel):
     model: str = "BAAI/bge-reranker-v2-m3"
 
 
+class ChunkingSettings(BaseModel):
+    strategy: str = "structural"  # structural | fixed | recursive（P7 消融用）
+    max_chars: int = 600
+    min_chars: int = 100
+    overlap: int = 80
+    table_max_chars: int = 4000
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_nested_delimiter="__", extra="ignore"
@@ -40,10 +48,12 @@ class Settings(BaseSettings):
     database_url: str = "mysql+asyncmy://root:medicalrag@localhost:3307/medicalrag"
     redis_url: str = "redis://localhost:6380/0"
     milvus_uri: str = "http://localhost:19530"
+    milvus_collection: str = "medical_chunks"
 
     llm: LLMSettings = LLMSettings()
     embedding: EmbeddingSettings = EmbeddingSettings()
     reranker: RerankerSettings = RerankerSettings()
+    chunking: ChunkingSettings = ChunkingSettings()
 
 
 @lru_cache
