@@ -7,7 +7,11 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': { target: 'http://localhost:8000', changeOrigin: true },
+      // 本机 8000 被占用时：API_TARGET=http://localhost:8100 npm run dev
+      '/api': {
+        target: process.env.API_TARGET || 'http://localhost:8000',
+        changeOrigin: true,
+      },
     },
   },
 })

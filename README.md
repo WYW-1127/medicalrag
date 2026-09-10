@@ -9,7 +9,7 @@
 - [x] P3 检索管线（双路召回 + 手写 RRF/加权融合 + BGE 重排 + 属性过滤 + 调试 CLI）
 - [x] P4 Agentic 编排与生成（LangGraph：分析/改写/分解/反思/引用生成/忠实度校验/拒答）
 - [x] P5 API 层（JWT / SSE 流式 / 多轮会话 / 知识库管理 / 后台入库）
-- [ ] P6 前端（对话 + 检索时间线 + 知识库管理）
+- [x] P6 前端（React 对话 + 引用浮窗 + 检索时间线 + 知识库管理）
 - [ ] P7 评估体系（三层指标 + 消融实验）
 - [ ] P8 部署打磨（一键全栈）
 
@@ -97,6 +97,25 @@ GET /api/v1/documents                    # 文档清单 + 最近入库任务
 GET /api/v1/documents/{hash}/chunks      # 文档 chunk 采样
 POST /api/v1/admin/ingest                # 触发后台入库；GET 查任务状态
 ```
+
+## Web 前端（P6）
+
+```bash
+# 终端 1：后端（8000 被占用时换端口并同步 API_TARGET）
+cd backend && uv run uvicorn app.main:app --port 8000
+# 终端 2：前端
+cd frontend && npm run dev          # http://localhost:5173，/api 自动代理到后端
+```
+
+功能：注册/登录 → 流式对话（token 逐字渲染 + Markdown/表格）→ 行内引用角标点击定位
+参考来源卡片（chunk 原文/来源/章节/页码）→ 右侧 **Agentic 检索时间线** 实时展示
+意图分析→改写→分解→检索→反思→生成→校验每一步耗时与结论 → 多会话管理 →
+知识库页（文档清单/chunk 采样/触发入库）。
+
+![对话页](docs/screenshots/chat.png)
+![知识库管理](docs/screenshots/knowledge.png)
+
+生产镜像：`cd frontend && docker build -t medicalrag-frontend .`（nginx 托管 + `/api` 反代，SSE 无缓冲配置）。
 
 ## 目录结构
 
