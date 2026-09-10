@@ -136,7 +136,7 @@ class HybridRetriever:
     def _to_chunk(hit: dict[str, Any], route: str) -> RetrievedChunk:
         ent = hit["entity"]
         return RetrievedChunk(
-            chunk_id=hit["id"],
+            chunk_id=hit["chunk_id"],  # MilvusClient 以主键字段名返回 id
             text=ent.get("text", ""),
             dense_score=hit["distance"] if route == "dense" else None,
             sparse_score=hit["distance"] if route == "sparse" else None,

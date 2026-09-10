@@ -1,4 +1,4 @@
-.PHONY: install lint fmt typecheck test infra-up infra-down infra-logs check-infra check-models ingest ingest-samples probe
+.PHONY: install lint fmt typecheck test infra-up infra-down infra-logs check-infra check-models ingest ingest-samples probe retrieve
 
 install:
 	cd backend && uv sync
@@ -39,3 +39,6 @@ ingest-samples:
 
 probe:
 	cd backend && uv run python ../scripts/probe_search.py "$(q)"
+
+retrieve:
+	cd backend && uv run python -m app.rag --q "$(q)"

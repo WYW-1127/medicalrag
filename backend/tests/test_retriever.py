@@ -9,7 +9,7 @@ from app.rag.retriever import HybridRetriever
 
 
 def _hit(cid: str, distance: float, text: str = "正文", department: str = "心血管"):
-    return {"id": cid, "distance": distance,
+    return {"chunk_id": cid, "distance": distance,
             "entity": {"text": text, "section_path": "指南 > 章节", "department": department,
                        "doc_type": "guideline", "source": "x.pdf", "page": 1, "seq": 0}}
 
