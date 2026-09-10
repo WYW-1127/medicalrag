@@ -53,7 +53,7 @@ strict = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["pymilvus.*", "asyncmy.*", "alembic.*"]
+module = ["pymilvus.*", "asyncmy.*", "alembic.*", "fitz.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
