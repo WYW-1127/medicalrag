@@ -1,0 +1,105 @@
+# MedicalRAG 本地基础设施（P1）。
+# 内存预算：etcd ~50MB + minio ~200MB + milvus ~2GB + mysql ~400MB + redis ~50MB ≈ 2.7GB
+# 镜像说明：默认走 docker.m.daocloud.io 镜像源（国内网络 Docker Hub 直连超时）。
+# 海外网络可把镜像名改回官方：minio/minio、milvusdb/milvus、library/mysql、library/redis。
+# 端口说明：宿主端口用 3307/6380/9002（本机 3306/6379/9001 已有本地服务占用）；
+#           容器内仍是默认端口。Milvus 19530/9091 无冲突，保持默认。
+services:
+  etcd:
+    container_name: medicalrag-etcd
+    image: quay.io/coreos/etcd:v3.5.14
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - etcd_data:/etcd
+    command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+
+  minio:
+    container_name: medicalrag-minio
+    image: docker.m.daocloud.io/minio/minio:RELEASE.2024-05-28T17-19-04Z
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/minio_data
+    command: minio server /minio_data --console-address ":9001"
+    ports:
+      - "9002:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+
+  milvus:
+    container_name: medicalrag-milvus
+    image: docker.m.daocloud.io/milvusdb/milvus:v2.5.4
+    command: ["milvus", "run", "standalone"]
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+    volumes:
+      - milvus_data:/var/lib/milvus
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      start_period: 90s
+      timeout: 20s
+      retries: 5
+    depends_on:
+      - etcd
+      - minio
+    restart: unless-stopped
+
+  mysql:
+    container_name: medicalrag-mysql
+    image: docker.m.daocloud.io/library/mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: medicalrag
+      MYSQL_DATABASE: medicalrag
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pmedicalrag"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    container_name: medicalrag-redis
+    image: docker.m.daocloud.io/library/redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  etcd_data:
+  minio_data:
+  milvus_data:
+  mysql_data:
+  redis_data:

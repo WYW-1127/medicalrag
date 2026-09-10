@@ -37,8 +37,8 @@ class Settings(BaseSettings):
     jwt_secret: str = "change-me"  # noqa: S105 —— 开发占位默认值，生产由 .env 注入
     jwt_expire_minutes: int = 60 * 24 * 7
 
-    database_url: str = "mysql+asyncmy://root:medicalrag@localhost:3306/medicalrag"
-    redis_url: str = "redis://localhost:6379/0"
+    database_url: str = "mysql+asyncmy://root:medicalrag@localhost:3307/medicalrag"
+    redis_url: str = "redis://localhost:6380/0"
     milvus_uri: str = "http://localhost:19530"
 
     llm: LLMSettings = LLMSettings()
