@@ -44,6 +44,14 @@ class RetrievalSettings(BaseModel):
     sparse_weight: float = 0.5
 
 
+class AgentSettings(BaseModel):
+    max_rewrite_iterations: int = 2  # grade 失败重写上限
+    max_regenerate: int = 1  # verify 失败再生成上限
+    grade_threshold: float = 0.4  # chunk 相关性阈值
+    grade_min_relevant: int = 2  # 有效相关 chunk 最少数量
+    subquery_max: int = 3  # 多跳拆解子查询上限
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_nested_delimiter="__", extra="ignore"
@@ -65,6 +73,7 @@ class Settings(BaseSettings):
     reranker: RerankerSettings = RerankerSettings()
     chunking: ChunkingSettings = ChunkingSettings()
     retrieval: RetrievalSettings = RetrievalSettings()
+    agent: AgentSettings = AgentSettings()
 
 
 @lru_cache
