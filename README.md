@@ -10,7 +10,7 @@
 - [x] P4 Agentic 编排与生成（LangGraph：分析/改写/分解/反思/引用生成/忠实度校验/拒答）
 - [x] P5 API 层（JWT / SSE 流式 / 多轮会话 / 知识库管理 / 后台入库）
 - [x] P6 前端（React 对话 + 引用浮窗 + 检索时间线 + 知识库管理）
-- [ ] P7 评估体系（三层指标 + 消融实验）
+- [x] P7 评估体系（108 题测试集 + 三层指标 + 消融实验）
 - [ ] P8 部署打磨（一键全栈）
 
 路线图：`docs/superpowers/plans/2026-09-10-medicalrag-roadmap.md`；设计文档：`docs/superpowers/specs/`
@@ -116,6 +116,27 @@ cd frontend && npm run dev          # http://localhost:5173，/api 自动代理�
 ![知识库管理](docs/screenshots/knowledge.png)
 
 生产镜像：`cd frontend && docker build -t medicalrag-frontend .`（nginx 托管 + `/api` 反代，SSE 无缓冲配置）。
+
+## 评估体系（P7）
+
+测试集 108 题（in-KB 60 由知识库反向 question-generation 生成 + 多跳 20 + 手写知识库外 20 + 急症 8），三层指标自动化评估：
+
+| 消融配置 | Recall@5 | MRR | nDCG@5 |
+|----------|----------|-----|--------|
+| 纯 dense | 0.550 | 0.417 | 0.443 |
+| + BM25 混合（RRF） | 0.500 | 0.439 | 0.439 |
+| **+ BGE 重排** | **0.631** | **0.566** | **0.566** |
+
+| Agentic 全链路 | 结果 | 目标 |
+|----------------|------|------|
+| 知识库外拒答率（防幻觉） | **100%** | ≥80% |
+| 急症拦截率（医学安全） | **100%** | 100% |
+| in-KB 正常回答率 | 75% | — |
+| 忠实度 / 相关性（中文 LLM-as-Judge） | 0.833 / 0.833 | — |
+
+两个值得讲的发现：① RRF 融合提升排序质量（MRR↑）但对口语化改写型查询的召回略降——**重排才是本场景最大收益项（Recall +8pp）**；② 严苛的检索反思+引用校验换来 100% 拒答率的同时，把 25% 的可答题也拒了（precision/recall 的权衡实证）。
+
+复现：`cd backend && uv run python -m app.evaluation`（完整报告见 `evaluation/reports/`，测试集见 `evaluation/datasets/`）。
 
 ## 目录结构
 
