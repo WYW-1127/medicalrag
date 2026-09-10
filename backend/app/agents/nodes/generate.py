@@ -6,6 +6,7 @@ from typing import Any
 
 from app.agents.prompts import DISCLAIMER, GENERATE_SYSTEM
 from app.agents.state import AgentState, NodeUpdate, StepEvent
+from app.agents.streaming import token_sink
 from app.core.providers.llm import ChatMessage, LLMProvider
 
 _CITATION_RE = re.compile(r"\[(\d+)\]")
@@ -71,7 +72,16 @@ def make_generate_node(
                     ),
                 )
             )
-        answer = await llm.chat(messages, temperature=0.3)
+        # token_sink 存在时流式生成并逐 token 回调（SSE），否则整段返回
+        sink = token_sink.get()
+        if sink is not None:
+            parts: list[str] = []
+            async for tok in llm.chat_stream(messages, temperature=0.3):
+                parts.append(tok)
+                sink(tok)
+            answer = "".join(parts)
+        else:
+            answer = await llm.chat(messages, temperature=0.3)
         answer, citations = parse_citations(answer, state.chunks)
         # 每次生成都是全新回答，统一追加一次免责声明（再生成会整体替换 answer）
         final_answer = answer + DISCLAIMER

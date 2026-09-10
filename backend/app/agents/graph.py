@@ -95,3 +95,38 @@ class MedicalRAGAgent:
             citations=final.citations,
             steps=final.steps,
         )
+
+    async def run_streaming(
+        self, query: str, history: list[ChatMessage] | None = None
+    ) -> Any:
+        """异步生成器：逐节点 yield ("step", StepEvent)，结束 yield ("result", AgentResult)。
+
+        token 级流式由 token_sink 承担（调用方在当前 task 内设置回调）。
+        """
+        raw_steps: list[Any] = []
+        final_raw: Any = None
+        async for chunk in self._graph.astream(
+            AgentState(query=query, history=history or []), stream_mode="values"
+        ):
+            final_raw = chunk
+            state = (
+                chunk if isinstance(chunk, AgentState) else AgentState.model_validate(chunk)
+            )
+            if len(state.steps) > len(raw_steps):
+                for ev in state.steps[len(raw_steps):]:
+                    yield ("step", ev)
+                raw_steps = list(state.steps)
+        final = (
+            final_raw
+            if isinstance(final_raw, AgentState)
+            else AgentState.model_validate(final_raw)
+        )
+        yield (
+            "result",
+            AgentResult(
+                route=final.route or "answered",
+                answer=final.answer,
+                citations=final.citations,
+                steps=final.steps,
+            ),
+        )
