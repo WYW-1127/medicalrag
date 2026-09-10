@@ -8,7 +8,7 @@
 - [x] P2 数据与 Ingestion 管线（多格式解析 / 结构感知分块 / Milvus 混合索引 / 幂等入库 CLI）
 - [x] P3 检索管线（双路召回 + 手写 RRF/加权融合 + BGE 重排 + 属性过滤 + 调试 CLI）
 - [x] P4 Agentic 编排与生成（LangGraph：分析/改写/分解/反思/引用生成/忠实度校验/拒答）
-- [ ] P5 API 层（SSE / 认证 / 会话）
+- [x] P5 API 层（JWT / SSE 流式 / 多轮会话 / 知识库管理 / 后台入库）
 - [ ] P6 前端（对话 + 检索时间线 + 知识库管理）
 - [ ] P7 评估体系（三层指标 + 消融实验）
 - [ ] P8 部署打磨（一键全栈）
@@ -74,6 +74,28 @@ analyze（意图/风险）─┬─ 风险/闲聊 → 安全回复
                               → retrieve（子查询并行）→ grade（Self-RAG 反思，低置信带反馈重写 ≤2 轮）
                               → generate（引用角标）→ verify（逐句忠实度校验，失败再生成 ≤1 次）
                               → fallback（证据不足诚实拒答 + 免责声明）
+```
+
+## HTTP API（P5）
+
+```bash
+cd backend && uv run uvicorn app.main:app --port 8000   # 启动 API（/docs 可交互调试）
+
+# 认证
+curl -X POST :8000/api/v1/auth/register -d '{"username":"u","password":"secret123"}'
+curl -X POST :8000/api/v1/auth/login    -d '{"...":"..."}'          # → access_token
+
+# 流式问答（SSE：step 节点事件 / token 增量 / done 引用汇总 / error）
+curl -N -X POST :8000/api/v1/chat -H "Authorization: Bearer $TOKEN" \
+     -d '{"query":"二甲双胍适合什么样的糖尿病人"}'
+# 多轮：{"query":"它的剂量呢","conversation_id":1}（自动指代消解）
+
+# 会话历史 / 知识库管理
+GET /api/v1/conversations                # 会话列表
+GET /api/v1/conversations/{id}/messages  # 消息历史（含引用）
+GET /api/v1/documents                    # 文档清单 + 最近入库任务
+GET /api/v1/documents/{hash}/chunks      # 文档 chunk 采样
+POST /api/v1/admin/ingest                # 触发后台入库；GET 查任务状态
 ```
 
 ## 目录结构
