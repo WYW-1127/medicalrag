@@ -45,7 +45,10 @@ def make_verify_node(
             ms=(time.perf_counter() - t0) * 1000,
             detail="通过" if result.passed else f"问题: {'; '.join(result.issues[:2])}",
         )
-        return {"verify": result, "steps": [*state.steps, ev]}
+        update: NodeUpdate = {"verify": result, "steps": [*state.steps, ev]}
+        if result.passed:
+            update["route"] = "answered"  # 校验通过即完成回答路径
+        return update
 
     return verify_node
 
