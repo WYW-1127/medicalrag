@@ -34,6 +34,16 @@ class ChunkingSettings(BaseModel):
     table_max_chars: int = 4000
 
 
+class RetrievalSettings(BaseModel):
+    recall_k: int = 50  # 每路召回数量
+    rerank_k: int = 30  # 送入重排的融合结果数
+    top_k: int = 8  # 最终返回
+    fusion: str = "rrf"  # rrf | weighted（P7 消融用）
+    rrf_k: int = 60  # RRF 平滑常数
+    dense_weight: float = 0.5
+    sparse_weight: float = 0.5
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env", env_nested_delimiter="__", extra="ignore"
@@ -54,6 +64,7 @@ class Settings(BaseSettings):
     embedding: EmbeddingSettings = EmbeddingSettings()
     reranker: RerankerSettings = RerankerSettings()
     chunking: ChunkingSettings = ChunkingSettings()
+    retrieval: RetrievalSettings = RetrievalSettings()
 
 
 @lru_cache
