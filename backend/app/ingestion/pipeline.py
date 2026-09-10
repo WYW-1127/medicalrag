@@ -25,7 +25,11 @@ class IngestStats:
 
 def scan_files(root: Path) -> list[Path]:
     return sorted(
-        p for p in root.rglob("*") if p.is_file() and p.suffix.lower() in SUPPORTED_SUFFIXES
+        p
+        for p in root.rglob("*")
+        if p.is_file()
+        and p.suffix.lower() in SUPPORTED_SUFFIXES
+        and p.name.upper() != "README.MD"  # 目录说明文件不是语料
     )
 
 

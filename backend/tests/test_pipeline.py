@@ -33,12 +33,13 @@ def _data(tmp_path: Path) -> Path:
         "# 指南\n\n## 一\n\n内容A。\n\n## 二\n\n内容B。", encoding="utf-8"
     )
     (tmp_path / "raw" / "ignored.txt").write_text("skip", encoding="utf-8")
+    (tmp_path / "raw" / "README.md").write_text("目录说明", encoding="utf-8")
     return tmp_path / "raw"
 
 
 def test_scan_filters_suffixes(tmp_path: Path):
     files = scan_files(_data(tmp_path))
-    assert [f.name for f in files] == ["g.md"]
+    assert [f.name for f in files] == ["g.md"]  # .txt 与 README.md 均被排除
 
 
 async def test_run_ingestion_dry_run(tmp_path: Path):
