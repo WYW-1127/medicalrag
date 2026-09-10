@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #ecfeff;
+  --color-primary-100: #cffafe;
+  --color-primary-200: #a5f3fc;
+  --color-primary-300: #67e8f9;
+  --color-primary-400: #22d3ee;
+  --color-primary-500: #06b6d4;
+  --color-primary-600: #0891b2;
+  --color-primary-700: #0e7490;
+  --color-primary-800: #155e75;
+  --color-primary-900: #164e63;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-800 antialiased;
+}
+
+/* markdown 基础排版 */
+.md-body p { @apply my-2 leading-relaxed; }
+.md-body h1, .md-body h2, .md-body h3 { @apply font-semibold text-slate-900 mt-4 mb-2; }
+.md-body h1 { @apply text-lg; }
+.md-body h2 { @apply text-base; }
+.md-body h3 { @apply text-sm; }
+.md-body ul { @apply list-disc pl-5 my-2; }
+.md-body ol { @apply list-decimal pl-5 my-2; }
+.md-body li { @apply my-1; }
+.md-body table { @apply my-3 w-full border-collapse text-sm; }
+.md-body th, .md-body td { @apply border border-slate-300 px-2 py-1 text-left; }
+.md-body th { @apply bg-slate-100 font-medium; }
+.md-body blockquote { @apply my-2 border-l-4 border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900; }
+.md-body code { @apply rounded bg-slate-100 px-1 text-[0.9em]; }
+.md-body strong { @apply font-semibold; }
