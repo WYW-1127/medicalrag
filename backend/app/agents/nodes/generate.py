@@ -1,6 +1,7 @@
 import re
 import time
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 from typing import Any
 
 from app.agents.prompts import DISCLAIMER, GENERATE_SYSTEM
@@ -21,7 +22,10 @@ def build_context(chunks: list[Any]) -> str:
 def parse_citations(
     answer: str, chunks: list[Any]
 ) -> tuple[str, list[dict[str, Any]]]:
-    """提取回答中的 [n] 引用角标并映射到 chunk 元数据（按首次出现去重）。"""
+    """提取回答中的 [n] 引用角标并映射到 chunk 元数据（按首次出现去重）。
+
+    source 存文件名（入库的 source 是路径，展示层只要名字）。
+    """
     seen: dict[int, dict[str, Any]] = {}
     for match in _CITATION_RE.finditer(answer):
         no = int(match.group(1))
@@ -31,7 +35,7 @@ def parse_citations(
                 "no": no,
                 "chunk_id": c.chunk_id,
                 "text": c.text[:200],
-                "source": c.source,
+                "source": Path(c.source).name,
                 "section_path": c.section_path,
                 "page": c.page,
             }

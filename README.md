@@ -7,7 +7,7 @@
 - [x] P1 基础设施与骨架（FastAPI / 配置分层 / 模型抽象层 / MySQL+Redis+Milvus / CI）
 - [x] P2 数据与 Ingestion 管线（多格式解析 / 结构感知分块 / Milvus 混合索引 / 幂等入库 CLI）
 - [x] P3 检索管线（双路召回 + 手写 RRF/加权融合 + BGE 重排 + 属性过滤 + 调试 CLI）
-- [ ] P4 Agentic 编排与生成（LangGraph）
+- [x] P4 Agentic 编排与生成（LangGraph：分析/改写/分解/反思/引用生成/忠实度校验/拒答）
 - [ ] P5 API 层（SSE / 认证 / 会话）
 - [ ] P6 前端（对话 + 检索时间线 + 知识库管理）
 - [ ] P7 评估体系（三层指标 + 消融实验）
@@ -59,6 +59,22 @@ cd backend && uv run python -m app.rag --q "哮喘" --fusion weighted --no-reran
 两阶段检索：dense（BGE-M3 语义）+ BM25（jieba 精确术语）各召回 top-50 → 手写融合
 （RRF / 加权可切换，消融变量）→ BGE-reranker-v2-m3 精排取 top-8；每阶段耗时记录；
 `RetrievalResult` 含 dense/sparse/fused/rerank 四级分数，可完整追溯排序变化。
+
+## Agentic 问答（P4）
+
+```bash
+make ask q="血压多高算是高血压？需要吃药吗"   # 完整 Agentic 链路 + 引用 + 执行时间线
+```
+
+LangGraph 状态机（每节点独立 Pydantic schema，可单测）：
+
+```
+analyze（意图/风险）─┬─ 风险/闲聊 → 安全回复
+                    └─ 医学 → rewrite（指代消解/术语化）→ decompose（多跳拆解）
+                              → retrieve（子查询并行）→ grade（Self-RAG 反思，低置信带反馈重写 ≤2 轮）
+                              → generate（引用角标）→ verify（逐句忠实度校验，失败再生成 ≤1 次）
+                              → fallback（证据不足诚实拒答 + 免责声明）
+```
 
 ## 目录结构
 
