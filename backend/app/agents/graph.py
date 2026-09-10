@@ -94,6 +94,7 @@ class MedicalRAGAgent:
             answer=final.answer,
             citations=final.citations,
             steps=final.steps,
+            final_chunks=final.chunks,
         )
 
     async def run_streaming(
@@ -128,5 +129,6 @@ class MedicalRAGAgent:
                 answer=final.answer,
                 citations=final.citations,
                 steps=final.steps,
+                final_chunks=final.chunks,
             ),
         )

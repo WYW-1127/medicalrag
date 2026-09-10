@@ -57,9 +57,10 @@ class AgentState(BaseModel):
 
 
 class AgentResult(BaseModel):
-    """对 P5 API 层的稳定出口。"""
+    """对 P5 API 层与评估层的稳定出口。"""
 
     route: str
     answer: str
     citations: list[dict[str, Any]] = Field(default_factory=list)
     steps: list[StepEvent] = Field(default_factory=list)
+    final_chunks: list[RetrievedChunk] = Field(default_factory=list)
