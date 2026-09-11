@@ -2,7 +2,23 @@
 
 生产级中文医学 RAG 系统：多格式知识入库 → Milvus 混合检索（dense + BM25 + RRF）+ BGE 重排 → LangGraph Agentic 编排（查询改写 / 多跳分解 / 检索反思 / 引用校验 / 安全拒答）→ 流式引用回答，配套量化评估体系与一键部署。
 
-## 项目状态
+```
+┌─────────┐ SSE  ┌───────────────────── Backend · FastAPI (async) ─────────────────────┐
+│ Frontend │ ──▶ │  API 层 ──▶ LangGraph Agentic 编排 ──▶ 检索管线 ──▶ 生成(流式+引用) │
+│ React+TS │ ◀── │       (JWT/SSE/会话/知识库管理)                                    │
+└─────────┘      └──────┬──────────┬──────────────┬──────────────┬───────────────────┘
+                        ▼          ▼              ▼              ▼
+                    MySQL 8     Redis 7      Milvus 2.5      云端 API
+                   (对话/文档) (缓存/限流)  (dense+BM25混合)  (DeepSeek/GLM
+                                                             +BGE Embed/Rerank)
+
+┌─── Ingestion · 离线 CLI（幂等）───────────────────────────────────────────┐
+│ PDF/MD/HTML/DOCX/JSON ─▶ 格式适配器 ─▶ 统一 Section 树 ─▶ 结构感知分块    │
+│      ─▶ BGE-M3 向量化 ─▶ Milvus(dense+sparse+元数据) ─▶ MySQL 文档登记   │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+## 项目状态（全部完成）
 
 - [x] P1 基础设施与骨架（FastAPI / 配置分层 / 模型抽象层 / MySQL+Redis+Milvus / CI）
 - [x] P2 数据与 Ingestion 管线（多格式解析 / 结构感知分块 / Milvus 混合索引 / 幂等入库 CLI）
@@ -11,22 +27,33 @@
 - [x] P5 API 层（JWT / SSE 流式 / 多轮会话 / 知识库管理 / 后台入库）
 - [x] P6 前端（React 对话 + 引用浮窗 + 检索时间线 + 知识库管理）
 - [x] P7 评估体系（108 题测试集 + 三层指标 + 消融实验）
-- [ ] P8 部署打磨（一键全栈）
+- [x] P8 部署打磨（全栈 docker compose / CI 前后端 / ADR）
 
-路线图：`docs/superpowers/plans/2026-09-10-medicalrag-roadmap.md`；设计文档：`docs/superpowers/specs/`
+技术决策记录（面试复习材料）：[docs/adr/](docs/adr/README.md)；设计文档：`docs/superpowers/specs/`
 
-## 快速开始（P1：基础设施 + API 骨架）
+## 快速开始（Docker 一键全栈）
 
-前置：Docker Desktop、uv、Python 3.12（uv 可自动安装）
+前置：Docker Desktop、uv（Python 3.12）、Node 22
 
 ```bash
-cp .env.example .env      # 填入 LLM__API_KEY / EMBEDDING__API_KEY / RERANKER__API_KEY
-make install              # 安装后端依赖（uv sync）
-make infra-up             # 启动 Milvus + MySQL + Redis（首次拉镜像约数分钟）
-make check-infra          # 连通性检查，期望三行 [ok]
-cd backend && cp ../.env.example .env && uv run alembic upgrade head   # 建表
-cd backend && uv run uvicorn app.main:app --reload --port 8000         # 启动 API
+cp .env.example .env     # 填入 LLM__API_KEY / EMBEDDING__API_KEY / RERANKER__API_KEY
+make up                  # 全栈启动：api + frontend + Milvus + MySQL + Redis（首次拉镜像较慢）
+make ingest              # 灌入 data/raw/ 语料（幂等，可重复执行）
+# 浏览器访问 http://localhost:5182 → 注册 → 提问
 ```
+
+Windows 双击 `start.bat` 等效（开发模式前后端分离窗口 + 自动开浏览器；`stop.bat` 停止）。
+
+<details>
+<summary>开发模式（不用 Docker 跑前后端）</summary>
+
+```bash
+make install && make infra-up && make check-infra      # 依赖 + 基础设施
+cd backend && cp ../.env.example .env && uv run alembic upgrade head
+cd backend && uv run uvicorn app.main:app --port 8100  # 后端（本机 8000 被占）
+cd frontend && API_TARGET=http://127.0.0.1:8100 npm run dev -- --port 5180
+```
+</details>
 
 访问 `http://127.0.0.1:8000/docs` 查看 OpenAPI；`/api/v1/health` 返回三依赖探活。
 
