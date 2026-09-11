@@ -1,4 +1,4 @@
-.PHONY: install lint fmt typecheck test infra-up infra-down infra-logs check-infra check-models ingest ingest-samples probe retrieve ask
+.PHONY: install lint fmt typecheck test infra-up infra-down infra-logs check-infra check-models ingest ingest-samples probe retrieve ask up down build logs
 
 install:
 	cd backend && uv sync
@@ -45,3 +45,16 @@ retrieve:
 
 ask:
 	cd backend && uv run python -m app.agents --q "$(q)"
+
+# ===== 全栈（Docker，根目录 docker-compose.yml）=====
+up:
+	docker compose up -d
+
+down:
+	docker compose down
+
+build:
+	docker compose build api frontend
+
+logs:
+	docker compose logs -f api frontend
