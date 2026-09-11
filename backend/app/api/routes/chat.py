@@ -30,13 +30,27 @@ def _sse(event: str, data: Any) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
+async def _ensure_agent(request: Request) -> Any:
+    """启动时初始化失败的 Agent 懒重试（如 Milvus 集合尚未建立），成功后缓存。"""
+    if getattr(request.app.state, "agent", None) is not None:
+        return request.app.state.agent
+    from app.agents.graph import MedicalRAGAgent
+    from app.core.config import get_settings
+
+    try:
+        request.app.state.agent = MedicalRAGAgent(settings=get_settings())
+        return request.app.state.agent
+    except Exception:  # noqa: BLE001 仍不可用则保持 None，下个请求再试
+        return None
+
+
 @router.post("/chat")
 async def chat(
     body: ChatIn,
     request: Request,
     user: User = Depends(get_current_user),  # noqa: B008
 ) -> StreamingResponse:
-    agent = getattr(request.app.state, "agent", None)
+    agent = await _ensure_agent(request)
     if agent is None:
         raise HTTPException(status_code=503, detail="Agent 未就绪（检查 Milvus 与模型配置）")
     factory = request.app.state.session_factory()
