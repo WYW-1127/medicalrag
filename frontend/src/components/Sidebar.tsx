@@ -1,3 +1,4 @@
+import { Plus } from '@phosphor-icons/react'
 import type { Conversation } from '../types'
 
 export default function Sidebar({
@@ -16,9 +17,10 @@ export default function Sidebar({
       <div className="p-3">
         <button
           onClick={onNew}
-          className="w-full rounded-lg border border-primary-200 bg-primary-50 py-2 text-sm font-medium text-primary-800 transition-colors hover:bg-primary-100"
+          className="flex w-full items-center justify-center gap-1 rounded-lg border border-primary-200 bg-primary-50 py-2 text-sm font-medium text-primary-800 transition-colors hover:bg-primary-100"
         >
-          ＋ 新对话
+          <Plus size={14} weight="bold" />
+          新对话
         </button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">

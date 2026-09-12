@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/*
+ * MedicalRAG 视觉系统（preserve 模式，信任优先）
+ * 品牌色：medical cyan（primary-700 #0e7490 为主交互色，全站唯一强调色）
+ * 圆角规则：控件（按钮/输入）8px=rounded-lg，卡片/面板 12px=rounded-xl，
+ *           气泡 16px=rounded-2xl——三档各司其职，不混用
+ * 主题：单一浅色主题锁定（医疗信任场景不做暗色反转）
+ */
 @theme {
   --color-primary-50: #ecfeff;
   --color-primary-100: #cffafe;
@@ -11,6 +18,9 @@
   --color-primary-700: #0e7490;
   --color-primary-800: #155e75;
   --color-primary-900: #164e63;
+
+  --font-sans: "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC",
+    system-ui, -apple-system, sans-serif;
 }
 
 html,
@@ -20,7 +30,24 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-800 antialiased;
+  @apply bg-slate-100 font-sans text-slate-800 antialiased;
+}
+
+/* 键盘可达性：统一的焦点环 */
+:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary-600;
+}
+
+/* 细滚动条（面板内不抢视觉） */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  @apply rounded-full bg-slate-300;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* markdown 基础排版 */

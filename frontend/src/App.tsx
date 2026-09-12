@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { HashRouter, Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom'
+import { Warning, Heartbeat } from '@phosphor-icons/react'
 import { clearToken, getToken } from './api/client'
 import ChatPage from './pages/ChatPage'
 import KnowledgePage from './pages/KnowledgePage'
@@ -8,6 +9,12 @@ import LoginPage from './pages/LoginPage'
 function RequireAuth({ children }: { children: ReactNode }) {
   if (!getToken()) return <Navigate to="/login" replace />
   return <>{children}</>
+}
+
+function TopBarOnAuthed() {
+  const { pathname } = useLocation()
+  if (pathname === '/login') return null
+  return <TopBar />
 }
 
 function TopBar() {
@@ -32,7 +39,10 @@ function TopBar() {
         </NavLink>
       </div>
       <div className="flex items-center gap-3">
-        <span className="text-sm font-semibold text-primary-800">⚕ MedicalRAG</span>
+        <span className="flex items-center gap-1.5 text-sm font-semibold text-primary-800">
+          <Heartbeat size={16} weight="bold" />
+          MedicalRAG
+        </span>
         <button
           className="text-sm text-slate-500 hover:text-slate-700"
           onClick={() => {
@@ -51,9 +61,9 @@ function DisclaimerBar() {
   const { pathname } = useLocation()
   if (pathname === '/login') return null
   return (
-    <div className="shrink-0 bg-amber-50 px-4 py-1.5 text-center text-xs text-amber-800">
-      ⚠️ 内容基于公开医学资料由 AI 生成，仅供参考，不能替代专业医疗建议、诊断或治疗。急症请拨打
-      120。
+    <div className="flex shrink-0 items-center justify-center gap-1.5 bg-amber-50 px-4 py-1.5 text-center text-xs text-amber-800">
+      <Warning size={13} weight="fill" className="shrink-0" />
+      内容基于公开医学资料由 AI 生成，仅供参考，不能替代专业医疗建议、诊断或治疗。急症请拨打 120。
     </div>
   )
 }
@@ -63,7 +73,7 @@ export default function App() {
     <HashRouter>
       <div className="flex h-screen flex-col">
         <DisclaimerBar />
-        <TopBar />
+        <TopBarOnAuthed />
         <div className="min-h-0 flex-1">
           <Routes>
             <Route path="/login" element={<LoginPage />} />

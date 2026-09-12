@@ -139,6 +139,7 @@ cd frontend && npm run dev          # http://localhost:5173，/api 自动代理�
 意图分析→改写→分解→检索→反思→生成→校验每一步耗时与结论 → 多会话管理 →
 知识库页（文档清单/chunk 采样/触发入库）。
 
+![登录页](docs/screenshots/login.png)
 ![对话页](docs/screenshots/chat.png)
 ![知识库管理](docs/screenshots/knowledge.png)
 

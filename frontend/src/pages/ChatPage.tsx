@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
+import { Heartbeat } from '@phosphor-icons/react'
 import { api } from '../api/client'
 import { streamChat } from '../api/sse'
 import type { Conversation, DonePayload, Message, StepEvent } from '../types'
@@ -119,14 +120,13 @@ export default function ChatPage() {
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           {messages.length === 0 && !streamText && !busy && (
             <div className="mx-auto max-w-md px-4 py-16 text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-700 text-3xl text-white">
-                ⚕
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-700 text-white">
+                <Heartbeat size={30} weight="bold" />
               </div>
               <h1 className="text-lg font-semibold text-slate-800">医学知识问答</h1>
               <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                基于临床指南/药品说明书知识库的检索增强问答。
-                <br />
-                支持「A药和B药哪个更适合我」这类对比问题，回答附可溯源引用。
+                基于心血管临床指南与药品说明书知识库的检索增强问答，
+                支持对比型问题与多轮追问，回答附可溯源引用。
               </p>
               <div className="mt-5 space-y-2 text-left">
                 {['高血压的诊断标准是什么？', '二甲双胍适合什么样的糖尿病人？', '哮喘急性发作如何处理？'].map(

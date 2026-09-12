@@ -1,5 +1,9 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from 'react'
 
+/*
+ * 圆角规则见 index.css：控件 rounded-lg，卡片 rounded-xl
+ */
+
 export function Button({
   className = '',
   variant = 'primary',
@@ -12,7 +16,7 @@ export function Button({
   }
   return (
     <button
-      className={`rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${styles[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 hover:-translate-y-px active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:scale-100 ${styles[variant]} ${className}`}
       {...props}
     />
   )
@@ -21,7 +25,7 @@ export function Button({
 export function Input({ className = '', ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`w-full rounded-md border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 ${className}`}
+      className={`w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 transition-colors placeholder:text-slate-400 hover:border-slate-400 focus:border-primary-600 focus:ring-2 focus:ring-primary-100 focus:outline-none ${className}`}
       {...props}
     />
   )
@@ -32,6 +36,12 @@ export function Card({ className = '', children }: { className?: string; childre
     <div className={`rounded-xl border border-slate-200 bg-white shadow-sm ${className}`}>
       {children}
     </div>
+  )
+}
+
+export function FieldLabel({ children }: { children: ReactNode }) {
+  return (
+    <label className="mb-1.5 block text-xs font-medium text-slate-600">{children}</label>
   )
 }
 
