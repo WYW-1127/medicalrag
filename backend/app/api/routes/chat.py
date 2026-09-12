@@ -113,6 +113,7 @@ async def chat(
                         "done",
                         {
                             "route": payload.route,
+                            "answer": payload.answer,
                             "citations": payload.citations,
                             "conversation_id": conversation_id,
                             "message_id": msg.id,

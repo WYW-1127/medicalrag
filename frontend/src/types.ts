@@ -15,6 +15,7 @@ export interface Citation {
 
 export interface DonePayload {
   route: 'answered' | 'safe' | 'fallback'
+  answer: string
   citations: Citation[]
   conversation_id: number
   message_id: number

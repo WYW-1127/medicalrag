@@ -100,7 +100,8 @@ export default function ChatPage() {
       setStreamText('')
       setMessages((prev) => [
         ...prev,
-        assistantFromDone(finalText, d.citations, d.latency_ms),
+        // safe/fallback 路径没有 token 流，最终文本以 done.answer 为准
+        assistantFromDone(d.answer || finalText, d.citations, d.latency_ms),
       ])
       if (!activeId) setActiveId(d.conversation_id)
       refreshConversations()
