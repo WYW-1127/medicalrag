@@ -39,6 +39,14 @@ def parse_file(path: Path, data_root: Path) -> ParsedDocument:
     )
 
 
+def fit_varchar(text: str, max_bytes: int) -> str:
+    """按 UTF-8 字节数截断（Milvus varchar max_length 以字节计，非字符数）。"""
+    encoded = text.encode("utf-8")
+    if len(encoded) <= max_bytes:
+        return text
+    return encoded[:max_bytes].decode("utf-8", errors="ignore")
+
+
 async def run_ingestion(
     data_root: Path,
     *,
@@ -87,9 +95,9 @@ async def run_ingestion(
             rows = [
                 {
                     "chunk_id": c.chunk_id,
-                    "text": c.text[:8000],  # Milvus varchar 上限 8192 的最后防线
+                    "text": fit_varchar(c.text, 8000),  # varchar 上限 8192 字节
                     "dense": v,
-                    "section_path": c.section_path or "",
+                    "section_path": fit_varchar(c.section_path, 500),
                     "page": c.page or 0,
                     "seq": c.seq,
                 }
