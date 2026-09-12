@@ -1,6 +1,6 @@
 # MedicalRAG —— 医学知识检索与问答 Copilot
 
-生产级中文医学 RAG 系统：多格式知识入库 → Milvus 混合检索（dense + BM25 + RRF）+ BGE 重排 → LangGraph Agentic 编排（查询改写 / 多跳分解 / 检索反思 / 引用校验 / 安全拒答）→ 流式引用回答，配套量化评估体系与一键部署。
+生产级**心血管专科**中文医学 RAG Copilot：多格式知识入库 → Milvus 混合检索（dense + BM25 + RRF）+ BGE 重排 → LangGraph Agentic 编排（查询改写 / 多跳分解 / 检索反思 / 引用校验 / 安全拒答）→ 流式引用回答，配套量化评估体系与一键部署。
 
 ```
 ┌─────────┐ SSE  ┌───────────────────── Backend · FastAPI (async) ─────────────────────┐

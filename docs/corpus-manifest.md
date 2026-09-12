@@ -1,4 +1,4 @@
-# 真实语料清单（2026-09-10 收集）
+# 真实语料清单（2026-09-12 起聚焦心血管专科）
 
 > 语料存放于 `data/raw/`（gitignore，仅本地学习用途，不分发）。本清单记录来源与获取方式，便于重建。
 
@@ -31,3 +31,34 @@
 - 胰腺癌指南为期刊节选（文字层薄），扩容时建议补充完整版
 - 扩容目标（P7 评估前）：每科室 3-5 份、总量 20+ 份 PDF；优先补：肾病（CKD）、肝病（乙肝/丙肝防治指南）、精神科（抑郁防治指南）、儿科
 - 下载校验命令：`make ingest` 前先 `cd backend && uv run python -c "import fitz,pathlib; [print(p.name, fitz.open(p).page_count) for p in pathlib.Path('../data/raw/pdf').rglob('*.pdf')]"` 确认 PDF 有效
+
+
+## 2026-09-12 专科化重组
+
+方向调整为**心血管专科 Copilot**，其他科室语料移至 `data/raw_archive/`（不入库）。
+
+### 心血管指南套件（10 份 PDF + 1 份 md）
+
+| 文件 | 来源 |
+|------|------|
+| 中国高血压防治指南2024修订版.pdf（98 页） | [上海疾控](https://www.scdc.sh.cn/shjk/gxy-gfzn/20241011/9843.html) |
+| 中国血脂管理指南2023.pdf | [上海疾控附件](https://www.scdc.sh.cn/shjk/xn-gdnr/20240201/7522.html) |
+| 中国心血管病一级预防指南2020.pdf（39 页全文） | [上海疾控心脑血管栏目](https://www.scdc.sh.cn/shjk/xnxgjb/index.html) |
+| 成人高脂血症食养指南2023.pdf | 同上（卫健委发布） |
+| 心房颤动目前的认识和治疗建议G2018.pdf（54 页全文） | [医脉通指南存档直链](http://medi-guide.meditool.cn/ymtpdf/7138415C-5BA7-2BE2-9999-51FEA6AA62B9.pdf) |
+| 急性心力衰竭诊断和治疗指南.pdf（32 页全文） | [医脉通直链](http://medi-guide.meditool.cn/guidepdf/DB8F95C3-F11C-72B8-3F3D-976431FC56E3.pdf) |
+| 基层心血管病综合管理实践指南2020.pdf（73 页） | [医脉通直链](http://medi-guide.meditool.cn/ymtpdf/351BE70D-FE92-DEB4-FA1D-F00AF1F923C3.pdf) |
+| 基层冠心病与缺血性脑卒中共患管理专家共识2022.pdf | [云图书馆直链](https://xadxyylib.yuntsg.com/ueditor/jsp/upload/file/20240322/1711076069581051131.pdf) |
+| 中国心力衰竭诊断和治疗指南2024解读.pdf | [临床心血管病杂志](https://lcxxg.whuhzzs.com/data/article/lcxxg/preview/pdf/lcxxgbzz-40-6-437.pdf) |
+| ESC心房颤动管理指南2020更新解读.pdf | [医学界](https://studioyszimg.yxj.org.cn/edxpo7yathc.pdf) |
+| 稳定性冠心病基层诊疗指南2020.md | [中华全科医师杂志 HTML](https://cmab.yiigle.com/uploads/guide_html/) 经 trafilatura 抽取（`scripts/fetch_guidelines.py`） |
+
+### 心血管药品说明书 JSON ×9（structured/，标准说明书内容手写整理）
+
+阿司匹林肠溶片、硫酸氢氯吡格雷片、阿托伐他汀钙片、酒石酸美托洛尔片、苯磺酸氨氯地平片、
+缬沙坦胶囊、硝酸甘油片、华法林钠片、呋塞米片——覆盖抗板/他汀/β阻滞/CCB/ARB/硝酸酯/抗凝/利尿八大类。
+
+### 未能获取（记录备查）
+
+- 中国心力衰竭诊断和治疗指南 2024 全文：csc.cma.org.cn 拒绝程序化抓取，已收其官方解读 + 急性心衰指南全文替代
+- 慢性稳定性冠心病诊断与治疗指南 2018 全文：需知网权限，已收基层版全文替代
