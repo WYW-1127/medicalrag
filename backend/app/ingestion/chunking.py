@@ -120,6 +120,13 @@ def _split_sentences(text: str, s: ChunkingSettings) -> list[str]:
     parts: list[str] = []
     buf = ""
     for seg in _iter_sentences(text):
+        # 无断句符的超长段（如指南中的条目列表）硬切，防止超出向量库字段上限
+        while len(seg) > s.max_chars:
+            if buf:
+                parts.append(buf)
+                buf = ""
+            parts.append(seg[: s.max_chars])
+            seg = seg[-s.overlap :] if s.overlap else seg[s.max_chars :]
         if len(buf) + len(seg) > s.max_chars and buf:
             parts.append(buf)
             buf = buf[-s.overlap :] + seg if s.overlap else seg

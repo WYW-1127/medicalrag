@@ -76,3 +76,18 @@ def test_unknown_strategy_raises():
         raise AssertionError("should raise ValueError")
     except ValueError:
         pass
+
+
+def test_long_unbroken_text_hard_split():
+    """无断句符的超长文本（如条目列表）被硬切，不超过上限。"""
+    from app.ingestion.models import ParsedDocument
+    from app.ingestion.models import Section as S
+
+    doc = ParsedDocument(
+        source_path="x", doc_type="guideline", department="综合",
+        title="食养", doc_hash="b" * 16,
+        sections=[S(level=1, title="条目", text="•" + "超长无标点内容" * 700)],  # ~4900 字符无断句
+    )
+    chunks = chunk_document(doc, ChunkingSettings(strategy="structural", max_chars=600, overlap=80))
+    assert chunks
+    assert all(len(c.text) <= 610 for c in chunks)

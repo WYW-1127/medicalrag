@@ -87,7 +87,7 @@ async def run_ingestion(
             rows = [
                 {
                     "chunk_id": c.chunk_id,
-                    "text": c.text,
+                    "text": c.text[:8000],  # Milvus varchar 上限 8192 的最后防线
                     "dense": v,
                     "section_path": c.section_path or "",
                     "page": c.page or 0,
