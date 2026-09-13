@@ -36,7 +36,8 @@
 前置：Docker Desktop、uv（Python 3.12）、Node 22
 
 ```bash
-cp .env.example .env     # 填入 LLM__API_KEY / EMBEDDING__API_KEY / RERANKER__API_KEY
+cp .env.example .env     # 填入 3 个 API key（根目录 .env 是全项目唯一配置源）
+make install             # 安装后端依赖（宿主机执行 make ingest 时需要）
 make up                  # 全栈启动：api + frontend + Milvus + MySQL + Redis（首次拉镜像较慢）
 make ingest              # 灌入 data/raw/ 语料（幂等，可重复执行）
 # 浏览器访问 http://localhost:5182 → 注册 → 提问
@@ -49,7 +50,7 @@ Windows 双击 `start.bat` 等效（开发模式前后端分离窗口 + 自动�
 
 ```bash
 make install && make infra-up && make check-infra      # 依赖 + 基础设施
-cd backend && cp ../.env.example .env && uv run alembic upgrade head
+uv run alembic upgrade head   # 开发模式建表（读仓库根目录 .env）
 cd backend && uv run uvicorn app.main:app --port 8100  # 后端（本机 8000 被占）
 cd frontend && API_TARGET=http://127.0.0.1:8100 npm run dev -- --port 5180
 ```

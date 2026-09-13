@@ -3,7 +3,7 @@ from app.agents.nodes.rewrite import make_rewrite_node
 from app.agents.state import AgentState
 from app.core.config import AgentSettings
 from app.core.providers.llm import ChatMessage
-from tests.test_node_analyze import ScriptedLLM
+from tests.conftest import ScriptedLLM
 
 
 async def test_rewrite_resolves_coreference_with_history():

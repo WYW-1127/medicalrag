@@ -1,7 +1,12 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# 配置唯一来源：仓库根目录 .env（按本文件位置定位，不依赖启动时的 cwd；
+# Docker 容器内该文件不存在，靠环境变量注入，pydantic 对缺失的 env_file 静默跳过）
+_REPO_ENV = Path(__file__).resolve().parents[3] / ".env"
 
 
 class LLMSettings(BaseModel):
@@ -54,7 +59,7 @@ class AgentSettings(BaseModel):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", env_nested_delimiter="__", extra="ignore"
+        env_file=str(_REPO_ENV), env_nested_delimiter="__", extra="ignore"
     )
 
     app_name: str = "MedicalRAG"

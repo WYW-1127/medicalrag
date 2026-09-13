@@ -5,7 +5,7 @@ from app.core.config import Settings
 from app.evaluation.dataset import EvalQuestion
 from app.evaluation.runner import run_agent_eval, run_retrieval_eval
 from app.rag.models import RetrievalResult, RetrievedChunk
-from tests.test_node_analyze import ScriptedLLM
+from tests.conftest import ScriptedLLM
 
 
 class RankRetriever:

@@ -4,21 +4,8 @@ from app.agents.llm_io import ask_json, extract_json
 from app.agents.nodes.analyze import make_analyze_node, route_after_analyze
 from app.agents.nodes.safe_reply import safe_reply_node
 from app.agents.state import AgentState, QueryAnalysis
-from app.core.providers.llm import ChatMessage, LLMProvider, ProviderError
-
-
-class ScriptedLLM(LLMProvider):
-    """按脚本顺序返回预设回复的假 LLM。"""
-
-    def __init__(self, replies: list[str]) -> None:
-        self.replies = list(replies)
-        self.calls: list[list[ChatMessage]] = []
-
-    async def chat(self, messages, *, temperature=None):  # type: ignore[no-untyped-def]
-        self.calls.append(list(messages))
-        if not self.replies:
-            raise AssertionError("脚本回复耗尽")
-        return self.replies.pop(0)
+from app.core.providers.llm import ProviderError
+from tests.conftest import ScriptedLLM
 
 
 # ---- llm_io ----

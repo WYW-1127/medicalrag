@@ -5,7 +5,7 @@ from app.agents.nodes.retrieve import make_retrieve_node
 from app.agents.state import AgentState
 from app.core.config import AgentSettings
 from app.rag.models import RetrievalResult, RetrievedChunk
-from tests.test_node_analyze import ScriptedLLM
+from tests.conftest import ScriptedLLM
 
 
 class FakeRetriever:

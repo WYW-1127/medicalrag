@@ -3,7 +3,7 @@
 from app.agents.graph import MedicalRAGAgent
 from app.core.config import Settings
 from app.rag.models import RetrievalResult, RetrievedChunk
-from tests.test_node_analyze import ScriptedLLM
+from tests.conftest import ScriptedLLM
 
 MEDICAL = '{"intent": "medical", "risk_type": "", "reason": "医学咨询"}'
 RISK = '{"intent": "risk", "risk_type": "剧烈胸痛", "reason": "急症"}'

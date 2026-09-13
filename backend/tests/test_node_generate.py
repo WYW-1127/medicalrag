@@ -3,7 +3,7 @@ from app.agents.nodes.generate import build_context, make_generate_node, parse_c
 from app.agents.nodes.verify import make_verify_node, route_after_verify
 from app.agents.state import AgentState, VerifyResult
 from app.rag.models import RetrievedChunk
-from tests.test_node_analyze import ScriptedLLM
+from tests.conftest import ScriptedLLM
 
 
 def _chunks():
