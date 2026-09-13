@@ -18,6 +18,81 @@
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
+## 快速开始（Docker 全栈，5 步）
+
+> 前置只要求两样：**Docker Desktop**（运行全部服务）和 **uv**（宿主机执行数据入库脚本，安装：`pip install uv` 或参照 [docs.astral.sh/uv](https://docs.astral.sh/uv/)）。前端在容器内构建，宿主机**不需要** Node。
+
+**Step 1 — 配置 API Key**
+
+```bash
+cp .env.example .env
+# 编辑 .env，填入 3 个 key（仓库根目录 .env 是全项目唯一配置源）：
+#   LLM__API_KEY        DeepSeek（https://platform.deepseek.cn，充值 10 元足够）
+#   EMBEDDING__API_KEY  SiliconFlow（https://cloud.siliconflow.cn，BGE-M3 免费）
+#   RERANKER__API_KEY   同 SiliconFlow key
+```
+
+**Step 2 — 启动全部服务**
+
+```bash
+make up        # 首次拉镜像需几分钟；之后的启动只需数十秒
+```
+
+**Step 3 — 确认就绪**
+
+```bash
+make check-infra     # 期望输出三行 [ok]：mysql / redis / milvus
+curl http://localhost:5182/api/v1/health
+# 期望：{"status":"ok","checks":{"mysql":"ok","redis":"ok","milvus":"ok"}}
+```
+
+**Step 4 — 灌入知识库数据（关键，跳过此步提问会全部拒答）**
+
+```bash
+make ingest-samples   # 入库随仓库分发的 3 份样例（合成指南/药品说明书/医学页面）
+# 或真实语料：data/raw/ 语料不随 git 分发，放置规范见 data/raw/README.md，然后：
+# make ingest
+```
+
+**Step 5 — 打开浏览器提问**
+
+访问 **http://localhost:5182** → 注册账号 → 提问（如"血压多高算是高血压？"）。
+回答为流式输出，右侧时间线实时展示 Agentic 检索的每一步，关键结论附可点击的引用来源。
+
+<details>
+<summary><b>常见问题</b></summary>
+
+- **提问全部返回"无法可靠回答"** → 知识库是空的，回看 Step 4 是否执行了 `make ingest-samples`
+- **`make up` 后 api 容器一直重启** → 检查 `.env` 三个 key 是否已填写；`docker compose logs api` 看具体报错
+- **端口冲突** → 宿主端口固定为 5182（前端）/ 8000（API）/ 3307（MySQL）/ 6380（Redis）/ 19530、9091（Milvus）/ 9002（minio），如被占用需修改 `docker-compose.yml` 端口映射
+- **首次 embedding 很慢** → SiliconFlow 免费通道偶发排队，重试即可；重跑 `make ingest` 幂等不会产生重复数据
+
+</details>
+
+<details>
+<summary><b>开发模式（前后端脱离 Docker 运行，改代码即时生效）</b></summary>
+
+前置额外需要 Node 22；基础设施（Milvus/MySQL/Redis）仍用 Docker：
+
+```bash
+make install                        # 安装后端依赖（uv sync）
+cd frontend && npm install && cd .. # 安装前端依赖
+make infra-up && make check-infra   # 启动并检查基础设施
+cd backend && uv run alembic upgrade head                        # 建表
+cd backend && uv run uvicorn app.main:app --port 8100            # 终端 1：后端 API
+cd frontend && API_TARGET=http://127.0.0.1:8100 npm run dev -- --port 5180   # 终端 2：前端
+# 访问 http://localhost:5180
+```
+
+Windows 可双击 `start.bat`（等效上述开发模式 + 自动开浏览器；`stop.bat` 停止）。
+生产镜像构建：`make build`（api 多阶段构建含自动建表；frontend 为 nginx 托管 + `/api` 反代）。
+</details>
+
+`http://localhost:8000/docs` 为 OpenAPI 交互文档；`/api/v1/health` 返回三依赖探活。
+
+切换 LLM：编辑 `.env` 的 `LLM__BASE_URL / LLM__MODEL / LLM__API_KEY`（例如 GLM：
+`https://open.bigmodel.cn/api/paas/v4` + `glm-4-flash`），无需改代码。
+
 ## 项目状态（全部完成）
 
 - [x] P1 基础设施与骨架（FastAPI / 配置分层 / 模型抽象层 / MySQL+Redis+Milvus / CI）
@@ -29,39 +104,7 @@
 - [x] P7 评估体系（108 题测试集 + 三层指标 + 消融实验）
 - [x] P8 部署打磨（全栈 docker compose / CI 前后端 / ADR）
 
-技术决策记录（面试复习材料）：[docs/adr/](docs/adr/README.md)；设计文档：`docs/superpowers/specs/`
-
-## 快速开始（Docker 一键全栈）
-
-前置：Docker Desktop、uv（Python 3.12）、Node 22
-
-```bash
-cp .env.example .env     # 填入 3 个 API key（根目录 .env 是全项目唯一配置源）
-make install             # 安装后端依赖（宿主机执行 make ingest 时需要）
-make up                  # 全栈启动：api + frontend + Milvus + MySQL + Redis（首次拉镜像较慢）
-make ingest              # 灌入 data/raw/ 语料（幂等，可重复执行）
-# 浏览器访问 http://localhost:5182 → 注册 → 提问
-```
-
-Windows 双击 `start.bat` 等效（开发模式前后端分离窗口 + 自动开浏览器；`stop.bat` 停止）。
-
-<details>
-<summary>开发模式（不用 Docker 跑前后端）</summary>
-
-```bash
-make install && make infra-up && make check-infra      # 依赖 + 基础设施
-uv run alembic upgrade head   # 开发模式建表（读仓库根目录 .env）
-cd backend && uv run uvicorn app.main:app --port 8100  # 后端（本机 8000 被占）
-cd frontend && API_TARGET=http://127.0.0.1:8100 npm run dev -- --port 5180
-```
-</details>
-
-访问 `http://127.0.0.1:8000/docs` 查看 OpenAPI；`/api/v1/health` 返回三依赖探活。
-
-端口说明：宿主端口使用 3307（MySQL）/ 6380（Redis）/ 19530、9091（Milvus）/ 9002（minio 控制台），避开本机已有服务。
-
-切换 LLM：编辑 `.env` 的 `LLM__BASE_URL / LLM__MODEL / LLM__API_KEY`（例如 GLM：
-`https://open.bigmodel.cn/api/paas/v4` + `glm-4-flash`），无需改代码。
+技术决策记录：[docs/adr/](docs/adr/README.md)；设计文档：`docs/superpowers/specs/`
 
 ## 知识入库（P2）
 
@@ -79,9 +122,9 @@ cd backend && uv run python -m app.ingestion --dir ../data/raw --dry-run   # 只
 ## 检索管线（P3）
 
 ```bash
-make retrieve q="HbA1c 控制目标"                                    # 完整链路：双路召回→RRF融合→BGE重排
+make retrieve q="阿司匹林的禁忌"   # 完整链路：双路召回 → RRF 融合 → BGE 重排
 cd backend && uv run python -m app.rag --q "妊娠期高血压如何用药" --department 心血管   # 科室过滤
-cd backend && uv run python -m app.rag --q "哮喘" --fusion weighted --no-rerank         # 切融合策略/关重排
+cd backend && uv run python -m app.rag --q "哮喘" --fusion weighted --no-rerank        # 切融合策略/关重排
 ```
 
 两阶段检索：dense（BGE-M3 语义）+ BM25（jieba 精确术语）各召回 top-50 → 手写融合
@@ -106,34 +149,29 @@ analyze（意图/风险）─┬─ 风险/闲聊 → 安全回复
 
 ## HTTP API（P5）
 
-```bash
-cd backend && uv run uvicorn app.main:app --port 8000   # 启动 API（/docs 可交互调试）
+服务启动后（Docker 模式已在 `localhost:8000`，开发模式见 `http://localhost:8100/docs`）：
 
-# 认证
-curl -X POST :8000/api/v1/auth/register -d '{"username":"u","password":"secret123"}'
-curl -X POST :8000/api/v1/auth/login    -d '{"...":"..."}'          # → access_token
+```bash
+# 注册并登录（获取 token）
+curl -X POST http://localhost:8000/api/v1/auth/register \
+     -H "Content-Type: application/json" \
+     -d '{"username":"demo","password":"secret123"}'
+TOKEN=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"username":"demo","password":"secret123"}' | python -c "import sys,json;print(json.load(sys.stdin)['access_token'])")
 
 # 流式问答（SSE：step 节点事件 / token 增量 / done 引用汇总 / error）
-curl -N -X POST :8000/api/v1/chat -H "Authorization: Bearer $TOKEN" \
-     -d '{"query":"二甲双胍适合什么样的糖尿病人"}'
-# 多轮：{"query":"它的剂量呢","conversation_id":1}（自动指代消解）
-
-# 会话历史 / 知识库管理
-GET /api/v1/conversations                # 会话列表
-GET /api/v1/conversations/{id}/messages  # 消息历史（含引用）
-GET /api/v1/documents                    # 文档清单 + 最近入库任务
-GET /api/v1/documents/{hash}/chunks      # 文档 chunk 采样
-POST /api/v1/admin/ingest                # 触发后台入库；GET 查任务状态
+curl -N -X POST http://localhost:8000/api/v1/chat \
+     -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" \
+     -d '{"query":"阿司匹林的禁忌是什么"}'
+# 多轮：{"query":"它的用法用量呢","conversation_id":1}（自动指代消解）
 ```
+
+其余端点：`GET /api/v1/conversations`（会话列表）、`GET /api/v1/conversations/{id}/messages`
+（历史含引用）、`GET /api/v1/documents`（文档清单）、`POST /api/v1/admin/ingest`（触发后台入库）。
+完整定义见 `/docs`（OpenAPI）。
 
 ## Web 前端（P6）
-
-```bash
-# 终端 1：后端（8000 被占用时换端口并同步 API_TARGET）
-cd backend && uv run uvicorn app.main:app --port 8000
-# 终端 2：前端
-cd frontend && npm run dev          # http://localhost:5173，/api 自动代理到后端
-```
 
 功能：注册/登录 → 流式对话（token 逐字渲染 + Markdown/表格）→ 行内引用角标点击定位
 参考来源卡片（chunk 原文/来源/章节/页码）→ 右侧 **Agentic 检索时间线** 实时展示
@@ -143,8 +181,6 @@ cd frontend && npm run dev          # http://localhost:5173，/api 自动代理�
 ![登录页](docs/screenshots/login.png)
 ![对话页](docs/screenshots/chat.png)
 ![知识库管理](docs/screenshots/knowledge.png)
-
-生产镜像：`cd frontend && docker build -t medicalrag-frontend .`（nginx 托管 + `/api` 反代，SSE 无缓冲配置）。
 
 ## 评估体系（P7）
 
@@ -174,11 +210,11 @@ cd frontend && npm run dev          # http://localhost:5173，/api 自动代理�
 ## 目录结构
 
 ```
-backend/     FastAPI 后端（app/core 配置与模型抽象层、app/models、alembic）
-frontend/    React 前端（P6）
-data/        原始与处理后语料（不入库）
-evaluation/  测试集与评估报告
-deploy/      docker-compose（基础设施）
-scripts/     运维脚本
-docs/        设计文档与 ADR
+backend/     FastAPI 后端（app/core 配置与模型抽象层、app/rag 检索、app/agents 编排、app/ingestion、alembic）
+frontend/    React 18 + TypeScript 前端
+data/        语料目录（raw/ 真实语料与 samples/ 内置样例，均不入 git；raw_archive/ 已归档科室）
+evaluation/  测试集（datasets/）与评估报告（reports/）
+deploy/      开发用基础设施 compose（全栈 compose 在仓库根目录）
+scripts/     运维脚本（连通性检查 / 测试集生成 / 指南抓取）
+docs/        设计文档、ADR、简历项目描述
 ```
